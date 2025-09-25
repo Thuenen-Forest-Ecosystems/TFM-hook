@@ -140,7 +140,7 @@ async function handleWebhook(payload) {
 }
 
 // Webhook endpoint
-app.post('/hook/refresh', async (req, res) => {
+app.post('/refresh', async (req, res) => {
   const signature = req.headers['x-hub-signature-256'];
   const payload = JSON.stringify(req.body);
 

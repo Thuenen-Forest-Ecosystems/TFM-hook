@@ -154,21 +154,36 @@ app.post('/refresh', async (req, res) => {
     return res.status(401).json({ error: 'Invalid signature' });
   }
 
+  // Filter for release events
+  const event = req.headers['x-github-event'];
+  if (event !== 'release') {
+    log.info(`Ignoring event: ${event}`);
+    return res.status(200).json({ message: `Ignored event: ${event}` });
+  }
+
+  const action = req.body.action;
+  if (!req.body.release || action !== 'published') {
+    log.info(`Ignoring release action: ${action}`);
+    return res.status(200).json({ message: `Ignored release action: ${action}` });
+  }
+
+  log.info(`Processing release: ${req.body.release.tag_name}`);
+
   try {
     const results = await handleWebhook(req.body);
-    
+
     const statusCode = results.success ? 200 : 500;
     log.info(`Webhook processing completed with status: ${statusCode}`);
-    
+
     res.status(statusCode).json({
       message: results.success ? 'Webhook processed successfully' : 'Webhook processed with errors',
       results
     });
   } catch (error) {
     log.error(`Webhook processing failed: ${error.message}`);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      message: error.message 
+      message: error.message
     });
   }
 });
